@@ -1,0 +1,9 @@
+#!/bin/bash
+screen -wipe
+if ! screen -list | grep -q GoFileserver ; then
+	cd /home/geco/go/src/github.com/codeskyblue/gohttpserver
+	screen -dmS GoFileserver
+	screen -S GoFileserver -X stuff './gohttpserver -r {{home}}/nas --port=80 --theme=black --title=PolyLANFileServer\n'
+else
+	echo Screen GoFileserver is already running.
+fi

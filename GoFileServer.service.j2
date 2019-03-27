@@ -1,0 +1,21 @@
+[Unit]
+Description=GoFileServer
+After=network.target remote-fs.target
+
+[Service]
+User=root
+Group=root
+WorkingDirectory={{home}}/go/src/github.com/codeskyblue/gohttpserver
+
+ExecStart={{home}}/go/src/github.com/codeskyblue/gohttpserver/run.sh
+ExecStop=/usr/bin/screen -S GoFileserver -X stuff 'quit\n'
+ExecStop=/usr/bin/sleep 10
+ExecStop=/usr/bin/screen -S GoFileserver -X kill
+
+Type=forking
+RemainAfterExit=true
+Restart=yes
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

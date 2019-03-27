@@ -1,0 +1,67 @@
+---
+-   name : Install GoHttpFileserver
+    hosts: fileserver
+    vars:
+        home: /home/{{ansible_ssh_user}}
+    become_method: sudo
+    vars_prompt:
+        -   name: "ansible_become_pass"
+            prompt: "Enter the become_pass"
+            private: yes
+    tasks:
+        -   name: install packages
+            apt: 
+                pkg: ['screen', 'golang', 'nfs-common', 'screen', 'git']
+                update_cache: yes
+                cache_valid_time: 3600
+                state: present
+            become: True
+            
+        -   name: mkdir nfs mount
+            file:
+                path: '{{home}}/nas'
+                state: directory   
+                
+        -   name: nfs mount freenas
+            mount:
+                path: '{{home}}/nas'
+                src: freenas.geco.local:/mnt/RAID1/files
+                fstype: nfs
+                state: mounted
+                boot: True
+            become: True
+       
+        -   name: get gohttpserver
+            command: go get -v github.com/codeskyblue/gohttpserver
+            environment:
+                GOPATH: '{{home}}/go'
+                
+        -   name: build gohttpserver
+            command: chdir={{home}}/go/src/github.com/codeskyblue/gohttpserver go build
+            environment:
+                GOPATH: '{{home}}/go'
+                
+        -   name: copy run.sh
+            template:
+                src: run.sh.j2
+                dest: '{{home}}/go/src/github.com/codeskyblue/gohttpserver/run.sh'
+                
+        -   name: make run.sh executable
+            file: 
+                path: '{{home}}/go/src/github.com/codeskyblue/gohttpserver/run.sh'
+                mode: 0755
+                
+        -   name: copy service template
+            template:
+                src: GoFileServer.service.j2
+                dest: /etc/systemd/system/GoFileServer.service            
+            become: True
+            
+        -   name: enable service
+            service:
+                name: GoFileServer
+                state: started
+                enabled: True
+            become: True
+                
+                

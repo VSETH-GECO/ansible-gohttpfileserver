@@ -1,0 +1,2 @@
+[fileserver]
+files ansible_host=10.10.0.71 ansible_port=22
