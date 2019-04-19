@@ -1,2 +1,6 @@
 [fileserver]
-files ansible_host=10.10.0.71 ansible_port=22
+files ansible_host=files
+
+[fileserver:vars]
+ansible_port=22
+service_user=geco

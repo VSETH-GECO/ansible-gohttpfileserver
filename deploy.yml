@@ -2,12 +2,8 @@
 -   name : Install GoHttpFileserver
     hosts: fileserver
     vars:
-        home: /home/{{ansible_ssh_user}}
+        home: /home/{{service_user}}
     become_method: sudo
-    vars_prompt:
-        -   name: "ansible_become_pass"
-            prompt: "Enter the become_pass"
-            private: yes
     tasks:
         -   name: install packages
             apt: 
@@ -20,12 +16,13 @@
         -   name: mkdir nfs mount
             file:
                 path: '{{home}}/nas'
-                state: directory   
+                state: directory  
+                owner: '{{service_user}}'
                 
-        -   name: nfs mount freenas
+        -   name: nfs mount nas
             mount:
                 path: '{{home}}/nas'
-                src: freenas.geco.local:/mnt/RAID1/files
+                src: nas:/mnt/RAID1/files
                 fstype: nfs
                 state: mounted
                 boot: True
@@ -34,23 +31,24 @@
         -   name: get gohttpserver
             command: go get -v github.com/codeskyblue/gohttpserver
             environment:
-                GOPATH: '{{home}}/go'
+                GOPATH: '{{home}}/go'    
+            become: yes
+            become_user: '{{service_user}}'
                 
         -   name: build gohttpserver
             command: chdir={{home}}/go/src/github.com/codeskyblue/gohttpserver go build
             environment:
-                GOPATH: '{{home}}/go'
+                GOPATH: '{{home}}/go'            
+            become: yes
+            become_user: '{{service_user}}'
                 
         -   name: copy run.sh
             template:
                 src: run.sh.j2
                 dest: '{{home}}/go/src/github.com/codeskyblue/gohttpserver/run.sh'
-                
-        -   name: make run.sh executable
-            file: 
-                path: '{{home}}/go/src/github.com/codeskyblue/gohttpserver/run.sh'
+                owner: root
                 mode: 0755
-                
+                                
         -   name: copy service template
             template:
                 src: GoFileServer.service.j2
